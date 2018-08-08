@@ -4,7 +4,9 @@ import tornado.web
 from tornado.httpclient import AsyncHTTPClient
 
 import db
+import simplecache
 
+CACHE = simplecache.SimpleCache()
 MAX_TRY_COUNT = 3
 
 
@@ -27,19 +29,40 @@ class ReportHandler(tornado.web.RequestHandler):
 
 class DistributeCountry(tornado.web.RequestHandler):
     def get(self):
+        key = 'distribute_country'
+        data = CACHE.get(key)
+        if data is not None:
+            self.write(data)
+            return
+
         with db.DB.cursor() as cursor:
             cursor.execute(db.QUERY_COUNTRY_DISTRIBUTION_SQL)
             rows = cursor.fetchall()
-            self.write(json.dumps(rows))
+            data = json.dumps(rows)
+            self.write(data)
+            if rows:
+                CACHE.set(key, data, 180)
+
 
 
 class DistributeRegion(tornado.web.RequestHandler):
     def get(self):
         country = self.get_argument('country')
+
+        key = 'distribute_region:' + country
+        data = CACHE.get(key)
+        if data is not None:
+            self.write(data)
+            return
+
+        
         with db.DB.cursor() as cursor:
             cursor.execute(db.QUERY_REGION_DISTRIBUTION_SQL, country)
             rows = cursor.fetchall()
-            self.write(json.dumps(rows))
+            data = json.dumps(rows)
+            self.write(data)
+            if rows:
+                CACHE.set(key, data, 180)
 
  
 def make_app():
@@ -47,6 +70,7 @@ def make_app():
         (r"/bitcoin_network/report", ReportHandler),
         (r"/distribute/country", DistributeCountry),
         (r"/distribute/region", DistributeRegion),
+        (r"/static/(.*)", tornado.web.StaticFileHandler, {"path": "./static/"}),
     ])
 
 

@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>比特币P2P网络IP分布</title>
+    <style>
+        #countryChart, #regionChart {
+            width: 100%;
+            height: 400px;
+            margin: 20px auto;
+        }
+    </style>
+    <script src="https://cdn.bootcss.com/echarts/4.1.0.rc2/echarts.common.js"></script>
+    <script src="https://cdn.bootcss.com/jquery/3.3.1/jquery.min.js"></script>
+</head>
+<body>
+    <div id="countryChart"></div>
+    <div style="text-align:center; margin-top: -20px">
+        <select id="select">
+        </select>
+    </div>
+    <div id="regionChart"></div>
+<script>
+    var countryChart = echarts.init(document.getElementById('countryChart'));
+    var regionChart = echarts.init(document.getElementById('regionChart'));
+    var options = {
+        backgroundColor: 'white',
+
+        title: {
+            text: '比特币P2P网络IP国家分布',
+            left: 'center',
+            top: 20,
+            // textStyle: {
+            //     color: '#ccc'
+            // }
+        },
+        tooltip : {
+            trigger: 'item',
+            formatter: "{b} : {d}%"
+        },
+
+        visualMap: {
+            show: false,
+            min: 500,
+            max: 600,
+            inRange: {
+                colorLightness: [0, 1]
+            }
+        },
+        series : [
+            {
+                name:'课程内容分布',
+                type:'pie',
+                clockwise:'true',
+                startAngle:'0',
+                radius : '60%',
+                center: ['50%', '50%'],
+                data:[
+                ],
+            }
+        ]
+    };
+    var regionOption = {
+        backgroundColor: 'white',
+
+        title: {
+            text: '',
+            left: 'center',
+            top: 20,
+        },
+        tooltip : {
+            trigger: 'item',
+            formatter: "{b} : {d}%"
+        },
+
+        visualMap: {
+            show: false,
+            min: 500,
+            max: 600,
+            inRange: {
+                colorLightness: [0, 1]
+            }
+        },
+        series : [
+            {
+                name:'',
+                type:'pie',
+                clockwise:'true',
+                startAngle:'0',
+                radius : '60%',
+                center: ['50%', '50%'],
+                data:[
+                ],
+            }
+        ]
+    };
+    $.get({url: 'http://127.0.0.1:8888/distribute/country'}).done(function(data) {
+        console.log(data)
+        data = JSON.parse(data);
+        var other = 0;
+        var countries = []
+        for (var i = 0; i < data.length; i++) {
+            if (i >= 8 || data[i].country.length === 0) {
+                other  += data[i].count;
+            } else {
+                countries.push(data[i].country);
+                options.series[0].data.push({value: data[i].count, name: data[i].country});
+            }
+        }
+        if (other > 0) {
+            options.series[0].data.push({value: other, name: '其他'});
+        }
+        countryChart.setOption(options);
+        initCountryOptions(countries);
+    })
+
+    function initCountryOptions(countries) {
+        for (var country of countries) {
+            $("#select").append('<option value="'+country+'">'+country+'</option>');
+        }
+        $("#select").trigger('change');
+    }
+
+    $("#select").change(function(e) {
+        console.log(e.target.value);
+        var country = e.target.value;
+        regionOption.title.text = "比特币P2P网络ip分布: " + country;
+        regionOption.series[0].data = []
+        $.get({url: 'http://127.0.0.1:8888/distribute/region?country='+country}).done(function(data) {
+            console.log(data);
+            data = JSON.parse(data);
+            var other = 0;
+            for (var i = 0; i < data.length; i++) {
+                if (i >= 8) {
+                    other  += data[i].count;
+                } else {
+                    if (data[i].region.length === 0) {
+                        data[i].region = '未知'
+                    }
+                    regionOption.series[0].data.push({value: data[i].count, name: data[i].region});
+                }
+            }
+            if (other > 0) {
+                regionOption.series[0].data.push({value: other, name: '其他'});
+            }
+            console.log(regionOption.series[0].data);
+            regionChart.setOption(regionOption);
+        })
+    })
+    
+</script>
+</body>
+</html>
