@@ -25,9 +25,28 @@ class ReportHandler(tornado.web.RequestHandler):
         self.write("ok")
 
 
+class DistributeCountry(tornado.web.RequestHandler):
+    def get(self):
+        with db.DB.cursor() as cursor:
+            cursor.execute(db.QUERY_COUNTRY_DISTRIBUTION_SQL)
+            rows = cursor.fetchall()
+            self.write(json.dumps(rows))
+
+
+class DistributeRegion(tornado.web.RequestHandler):
+    def get(self):
+        country = self.get_argument('country')
+        with db.DB.cursor() as cursor:
+            cursor.execute(db.QUERY_REGION_DISTRIBUTION_SQL, country)
+            rows = cursor.fetchall()
+            self.write(json.dumps(rows))
+
+ 
 def make_app():
     return tornado.web.Application([
-        (r"/bitcoin_network/report", ReportHandler)
+        (r"/bitcoin_network/report", ReportHandler),
+        (r"/distribute/country", DistributeCountry),
+        (r"/distribute/region", DistributeRegion),
     ])
 
 

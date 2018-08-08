@@ -23,6 +23,10 @@ UPDATE_ADDR_TABLE_GEO_SQL = "update `bitcoin_address` set `country`=%s, `region`
 
 UPDATE_ADDR_TABLE_VERSION_SQL = "update `bitcoin_address` set `agent`=%s, `version`=%s, `services`=%s where `ip`=%s"
 
+QUERY_COUNTRY_DISTRIBUTION_SQL = "select country, count(*) as count from bitcoin_address group by country order by count desc"
+
+QUERY_REGION_DISTRIBUTION_SQL = "select region, count(*) as count from bitcoin_address where country=%s group by region order by count desc"
+
 
 def init_db():
     with DB.cursor() as cursor:
