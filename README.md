@@ -38,7 +38,7 @@ g++ -std=c++11 main.cpp init.cpp network.cpp message.cpp addrseed.cpp
 ##### Ubuntu
 
 ```
-g++ -std=c++11 main.cpp init.cpp network.cpp message.cpp addrseed.cpp
+g++ -std=c++11 main.cpp init.cpp network.cpp message.cpp addrseed.cpp -I./include
 -lcrypto -lcurl -lpthread -O2 -o BitcoinNetwork
 ```
 
